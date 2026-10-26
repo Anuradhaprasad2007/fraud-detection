@@ -1,6 +1,7 @@
 from pathlib import Path
 import joblib
 import pandas as pd
+import shap
 from fastapi import FastAPI, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -20,8 +21,8 @@ THRESHOLD = 0.90
 # -----------------------------------------------------------------------------
 
 model = joblib.load(MODEL_PATH)
+explainer = shap.TreeExplainer(model)
 
-# Create the transactions table in the database if it doesn't exist yet
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Fraud Detection API")
@@ -62,7 +63,19 @@ def predict(txn: Transaction, db: Session = Depends(get_db)):
     fraud_probability = float(model.predict_proba(X)[0][1])
     is_fraud = fraud_probability >= THRESHOLD
 
-    # Save this prediction to the database
+    # SHAP explanation: which features pushed this prediction toward/away from fraud
+    shap_values = explainer.shap_values(X)
+    contributions = dict(zip(FEATURE_COLUMNS, shap_values[0].tolist()))
+    top_factors = sorted(contributions.items(), key=lambda item: abs(item[1]), reverse=True)[:3]
+    explanation = [
+        {
+            "feature": name,
+            "impact": round(value, 4),
+            "direction": "increased fraud risk" if value > 0 else "decreased fraud risk",
+        }
+        for name, value in top_factors
+    ]
+
     record = TransactionRecord(
         step=txn.step,
         type=txn.type,
@@ -83,6 +96,7 @@ def predict(txn: Transaction, db: Session = Depends(get_db)):
         "is_fraud": is_fraud,
         "fraud_probability": round(fraud_probability, 4),
         "threshold_used": THRESHOLD,
+        "top_factors": explanation,
     }
 
 
