@@ -37,10 +37,15 @@ with tab1:
             response = requests.post(f"{API_URL}/predict", json=payload)
             result = response.json()
 
-            if result.get("is_fraud"):
-                st.error(f"FRAUD DETECTED — probability: {result['fraud_probability']:.2%}")
+            risk_level = result.get("risk_level", "Unknown")
+            probability_text = f"{result['fraud_probability']:.2%}"
+
+            if risk_level == "High":
+                st.error(f"🔴 HIGH RISK — fraud probability: {probability_text}")
+            elif risk_level == "Medium":
+                st.warning(f"🟡 MEDIUM RISK — fraud probability: {probability_text}")
             else:
-                st.success(f"Looks legitimate — fraud probability: {result['fraud_probability']:.2%}")
+                st.success(f"🟢 LOW RISK — fraud probability: {probability_text}")
 
             st.write("**Top factors behind this decision:**")
             factors_df = pd.DataFrame(result["top_factors"])
@@ -48,6 +53,7 @@ with tab1:
 
         except Exception as e:
             st.error(f"Could not reach the backend: {e}")
+
 
 with tab2:
     st.subheader("Recent predictions")

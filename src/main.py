@@ -63,6 +63,13 @@ def predict(txn: Transaction, db: Session = Depends(get_db)):
     fraud_probability = float(model.predict_proba(X)[0][1])
     is_fraud = fraud_probability >= THRESHOLD
 
+    if fraud_probability < 0.3:
+        risk_level = "Low"
+    elif fraud_probability < THRESHOLD:
+        risk_level = "Medium"
+    else:
+        risk_level = "High"
+
     # SHAP explanation: which features pushed this prediction toward/away from fraud
     shap_values = explainer.shap_values(X)
     contributions = dict(zip(FEATURE_COLUMNS, shap_values[0].tolist()))
@@ -91,12 +98,15 @@ def predict(txn: Transaction, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(record)
 
+
     return {
         "id": record.id,
         "is_fraud": is_fraud,
         "fraud_probability": round(fraud_probability, 4),
         "threshold_used": THRESHOLD,
+        "risk_level": risk_level,
         "top_factors": explanation,
+   
     }
 
 
