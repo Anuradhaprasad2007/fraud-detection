@@ -206,5 +206,5 @@ fraud-detection/
 
 
 
-Built by Anuradha Prasad (\[@Anuradhaprasad2007](https://github.com/Anuradhaprasad2007)) and Nidhi Yadav (\[@NidhiYadav118](https://github.com/NidhiYadav118)) — final-year BCA project.
+Built by Anuradha Prasad (\[@Anuradhaprasad2007](https://github.com/Anuradhaprasad2007)), Nidhi Yadav (\[@NidhiYadav118](https://github.com/NidhiYadav118)) and Komal Kumari (\[@Komal385](https://github.com/komal385)) final-year BCA project.
 
