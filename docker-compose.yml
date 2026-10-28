@@ -1,0 +1,20 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fraud-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    container_name: fraud-dashboard
+    ports:
+      - "8501:8501"
+    depends_on:
+      - backend
